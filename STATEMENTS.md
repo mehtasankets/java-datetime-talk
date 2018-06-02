@@ -41,10 +41,6 @@ Is it still relevant?
 
 What is the relation to `java.util.Date`?
 
-### What is `deshaw.common.util.Day`?
-
-Discuss use of `deshaw.commmon.datelib.defaultLibraryPath`
-
 ### What are the database types available to represent date and time?
 
 Discuss mssql and postgres data types:
