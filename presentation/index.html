@@ -1,0 +1,765 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Date with Java Date</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/black.css">
+        <link rel="stylesheet" href="css/manual-overrides.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1>Date with Java Date ;)</h1>
+                </section>
+                <section>
+                    <h3>What's this presentation all about?</h3>
+                    <div class="fragment fade-up">
+                        <img src="images/meme1.jpg" height="300px" />
+                        <!-- <img src="images/meme2.jpg" height="300px" /> -->
+                    </div>
+                    <div class="fragment fade-up">
+                        <ul>
+                            <li class="fragment fade-up">Interactive disussion and not a talk</li>
+                            <li class="fragment fade-up">To discuss about date-time concepts in java</li>
+                            <li class="fragment fade-up">This is what happens in life</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h3>Today we'll discuss...</h3>
+                    <ul>
+                        <li class="fragment fade-up">Basics</li>
+                        <li class="fragment fade-up">Timezones</li>
+                        <li class="fragment fade-up">Dates at persistence layer</li>
+                        <li class="fragment fade-up">Dates (de)serialization</li>
+                        <li class="fragment fade-up">DST</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Basics</h3>
+                </section>
+                <section>
+                    <h4>java.util.Date</h4>
+                    <div class="fragment fade-up">
+                        The class Date represents a specific instant in time, with millisecond precision
+                    </div>
+                </section>
+                <section>
+                    <h4>In what ways can we create a java.util.Date object?</h4>
+                    <div class="fragment fade-up small-font">
+                        <h5>Pre-jdk8:</h5>
+                        <pre>
+                            <code data-trim data-noescape>
+                              jshell> new Date()
+                              $1 ==> Sun Apr 08 20:22:07 IST 2018
+
+                              jshell> new Date(1000) // milliseconds
+                              $2 ==> Thu Jan 01 05:30:01 IST 1970
+
+                              jshell> Calendar.getInstance().getTime()
+                              $3 ==> Sun Apr 08 20:22:10 IST 2018
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="fragment fade-up small-font">
+                        <h5>Post-jdk8:</h5>
+                        <pre>
+                            <code data-trim data-noescape>
+                              jshell> Date.from(Instant.now())
+                              $4 ==> Sun Apr 08 20:23:10 IST 2018
+
+                              jshell> Date.from(java.time.ZonedDateTime.now().toInstant())
+                              $5 ==> Sun Apr 08 20:23:10 IST 2018
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <h4>Date arithmetic using java.util.Date</h4>
+                    <div class="fragment fade-up">
+                    Adding a month
+                    </div>
+                    <div class="fragment fade-up small-font">
+                        <pre>
+                            <code data-trim data-noescape>
+                                d.setMonth(d.getMonth() + 1)
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="fragment fade-up small-font">
+                        <pre>
+                            <code data-trim data-noescape>
+                                jshell> d; d.setMonth(d.getMonth() + 1); d
+                                d ==> Thu Jan 01 05:30:01 IST 1970
+                                d ==> Sun Feb 01 05:30:01 IST 1970
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="fragment fade-up small-font">
+                        <pre>
+                            <code data-trim data-noescape>
+                                jshell> d; d.setMonth(d.getMonth() + 1); d
+                                d ==> Sat Jan 31 05:30:01 IST 1970
+                                d ==> Tue Mar 03 05:30:01 IST 1970
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="fragment fade-up small-font">
+                        Date arithmetic deprecated in java.util.Date!
+                        <ul>
+                            <li class="fragment fade-up">No real arithmetic methods. It only has setters.</li>
+                            <li class="fragment fade-up">Lack of internationalization</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h4>java.util.Calendar</h4>
+                    <div class="fragment fade-up">
+                        The Calendar class is an abstract class that provides methods
+                    </div>
+                    <div>
+                        <ul>
+                            <li class="fragment fade-up">for converting between a specific instant in time and a set of calendar fields such as YEAR, MONTH, DAY_OF_MONTH, HOUR, and so on</li>
+                            <li class="fragment fade-up">for manipulating the calendar fields, such as getting the date of the next week</li>
+                        </ul>
+                    </div>
+                    <div class="fragment fade-up">
+                        <pre>
+                            <code data-trim data-noescape>
+                                Calendar.getInstance()
+                                Calendar calendar = new GregorianCalendar(2013,1,28,13,24,56);
+                                calendar.setTime(new Date())
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+
+                <section>
+                    <h4>Date Arithmetic using java.util.Calendar</h4>
+
+                    <div class="fragment fade-up">
+                        <pre>
+                            <code data-trim data-noescape>
+                                jshell> c.getTime(); c.add(Calendar.MONTH, 1); c.getTime()
+                                $59 ==> Thu Jan 01 05:30:01 IST 1970
+                                $61 ==> Sun Feb 01 05:30:01 IST 1970
+                            </code>
+                        </pre>
+                    </div>
+
+                    <div class="fragment fade-up">
+                        <pre>
+                            <code data-trim data-noescape>
+                                jshell> c.getTime(); c.add(Calendar.MONTH, 1); c.getTime()
+                                $64 ==> Sat Jan 31 05:30:01 IST 1970
+                                $66 ==> Sat Feb 28 05:30:01 IST 1970
+                            </code>
+                        </pre>
+                    </div>
+
+                    <div class="fragment fade-up">
+                        Note:
+                    </div>
+                    <div>
+                        <ul>
+                            <li class="fragment fade-up">lenient and non-lenient modes</li>
+                            <li class="fragment fade-up">leap seconds (seconds run from  0-61)</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h4>What are different calendars available in Java?</h4>
+                    <ul>
+                        <li class="fragment fade-up">GregorianCalendar</li>
+                        <ul>
+                            <li class="fragment fade-up">GregorianCalendar is a concrete subclass of Calendar and provides the standard calendar system used by most of the world</li>
+                            <li class="fragment fade-up">Specifies default fields, calendar fields adjustments/resolutions, missing fields filled with start of epoch</li>
+                            <li class="fragment fade-up">Note: Months run from 0 to 11 - January to December</li>
+                            <li class="fragment fade-up">Note: Day of week runs from 1 to 7 - Sunday to Saturday</li>
+                        </ul>
+                        <li class="fragment fade-up">Other calendars: Thai Buddhist Calendar, Japanese Imperial Calendar (Era-based)</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>How to calculate next Business Day?</h4>
+                    <div class="fragment fade-up">
+                        <ul>
+                            <li class="fragment fade-up">deshaw.commons.util.Day, com.arcesium.dateutils.RelativeDateUtils</li>
+                            <li class="fragment fade-up">deshaw.common.datelib.defaultLibraryPath=/local/lib/packages/datelib/</li>
+                            <li class="fragment fade-up">Note: Roll forward/backward</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h4>What are the disadvantages of java.util.Date class?</h4>
+                    <ul>
+                        <li class="fragment fade-up">Mutable</li>
+                        <li class="fragment fade-up">Not a thread safe</li>
+                        <li class="fragment fade-up">Zero indexed months</li>
+                        <li class="fragment fade-up">Date represents both date and time</li>
+                        <li class="fragment fade-up">toString() converts timezone and prints</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>What are java.time.* classes?</h4>
+                    <ul>
+                        <li class="fragment fade-up">Instant: An instantaneous point on the time-line. (Same as java.util.Date, stores millis from epoch)</li>
+                        <li class="fragment fade-up">LocalDateTime: A date-time without a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30.</li>
+                        <ul>
+                            <li class="fragment fade-up">Other variations: LocalDate, LocalTime</li>
+                            <li class="fragment fade-up">Cannot be represented on timeline (no timezone info available)</li>
+                        </ul>
+                        <li class="fragment fade-up">OffsetDateTime: A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00.</li>
+                        <ul>
+                            <li class="fragment fade-up">Other variations: OffsetTime</li>
+                            <li class="fragment fade-up">TZ related rules cannot be applied</li>
+                        </ul>
+                        <li class="fragment fade-up">ZonedDateTime: A date-time with a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00 Europe/Paris.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h4>More?</h4>
+                        <ul>
+                            <li class="fragment fade-up">Period: For date based calculations</li>
+                            <li class="fragment fade-up">Duration: For time based calculations</li>
+                            <li class="fragment fade-up">Utilities: plus, minus, isAfter, isBefore, ofInstant, now, etc.</li>
+                            <li class="fragment fade-up">Compatibility with date</li>
+                            <ul>
+                                <li class="fragment fade-up"> date,calendar -> toInstant methods </li>
+                                <li class="fragment fade-up"> time classes -> ofInstant methods </li>
+                            </ul>
+                        </ul>
+                </section>
+
+                <section>
+                    <h3>Timezone</h3>
+                </section> 
+                <section>
+                    <h4>Fun with toString()</h4>
+                </section>
+                <section>
+                    <h4>What is the default timezone of a JVM?</h4>
+                    <ul>
+                        <li class="fragment fade-up">System's timezone</li>
+                        <ul>
+                            <div class="fragment fade-up">
+                                <pre>
+                                    <code data-trim data-noescape>
+                                        `---> timedatectl | grep "Time zone"
+                                        Time zone: Asia/Calcutta (IST, +0530)
+
+                                        `---> date
+                                        Thu Apr 12 21:53:10 IST 2018
+
+                                    </code>
+                                </pre>
+                            </div>
+                        </ul>
+                        <li class="fragment fade-up">To set specific timezone for JVM</li>
+                        <ul>
+                            <li class="fragment fade-up">-Duser.timezone=&lt;TIMEZONE&gt;</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <h4>What is the canonical source of TZ strings?</h4>
+                        <ul>
+                            <li class="fragment fade-up">From within Java</li>
+                            <div class="fragment fade-up">
+                                <pre>
+                                    <code data-trim data-noescape>
+                                        TimeZone.getAvailableIDs()
+                                    </code>
+                                </pre>
+                            </div>
+                            <li class="fragment fade-up">Inside JDK</li>
+                            <div class="fragment fade-up">
+                                <pre>
+                                    <code data-trim data-noescape>
+                                    `---> strings /usr/local/java/jdk9/lib/tzdb.dat | grep UTC
+                                    Etc/UTC
+                                    </code>
+                                </pre>
+                            </div>
+                        </ul>
+                </section>
+                <section>
+                    <h4>What is the difference between: UTC vs GMT</h4>
+                    <ul>
+                        <li class="fragment fade-up">UTC is a time standard</li>
+                        <li class="fragment fade-up">GMT is a timezone which is followed by few countries</li>
+                        <li class="fragment fade-up">No country follows UTC as a local timezone</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>What is the difference between: EST vs EDT vs EST5EDT vs America/New_York</h4>
+                    <ul>
+                        <li class="fragment fade-up">EST: Eastern Standard Time which is always UTC - 5:00</li>
+                        <li class="fragment fade-up">EDT: Not a valid timezone in java</li>
+                        <li class="fragment fade-up">EST5EDT: EDT timezone, UTC-5:00 / UTC-4:00 (based on DST)</li>
+                        <li class="fragment fade-up">America/New_York: Same as EST5EDT</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>Which timezone should be used for new york?</h4>
+                </section>
+                <section>
+                    <h4>What is joda-time library? Is it still relevant?</h4>
+                    <ul>
+                        <li class="fragment fade-up">Joda-Time became the de facto standard date and time library for Java prior to Java SE 8</li>
+                        <li class="fragment fade-up">Note: From Java SE 8 onwards, users are asked to migrate to java.time (JSR-310)</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Dates at persistence layer</h3>
+                </section>
+                <section>
+                    <h3>java.sql.Date, java.sql.Time, java.sql.Timestamp</h3>
+                    <ul>
+                        <li class="fragment fade-up">To map java Date to different sql date-time datatypes</li>
+                        <li class="fragment fade-up">Extends java.util.Date</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>ToString for java.sql.Date*</h4>
+                    <div class="fragment fade-up">
+                        <pre>
+                            <code data-trim data-noescape>
+                                jshell> new java.sql.Date(new Date(0).getTime()).toString()
+                                $26 ==> "1970-01-01"
+                                jshell> new java.sql.Time(new Date(0).getTime()).toString()
+                                $27 ==> "05:30:00"
+                                jshell> new java.sql.Timestamp(new Date(0).getTime()).toString()
+                                $28 ==> "1970-01-01 05:30:00.0"
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <h4>What do you think would be the output of the below program?</h4>
+                    <div class="fragment fade-up">
+                        <pre>
+                            <code data-trim data-noescape>
+                                // Let's say HYD Codemill
+                                TimeZone.setDefault(TimeZone.getTimeZone("Asia/Kolkata"));
+                                // Writing 1970-01-01T00:00:00Z
+                                java.sql.Timestamp timestamp = new java.sql.Timestamp(new Date(0).getTime());
+                                insertDate(timestamp); // into a columns with DATETIME datatype
+                                readDate();
+
+                                // Let's assume NYC Codemill
+                                TimeZone.setDefault(TimeZone.getTimeZone("America/New_York")); 
+                                readDate();
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <h4>SQL Server database types</h4>
+                    <div class="fragment fade-up">
+                        <pre>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>date</td>
+                                        <td>YYYY-MM-DD</td>
+                                    </tr>
+                                    <tr>
+                                        <td>datetime</td>
+                                        <td>YYYY-MM-DD hh:mm:ss[.nnn]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>datetime2</td>
+                                        <td>YYYY-MM-DD hh:mm:ss[.nnnnnnn]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>datetimeoffset</td>
+                                        <td>YYYY-MM-DD hh:mm:ss[.nnnnnnn] [+|-]hh:mm</td>
+                                    </tr>
+                                    <tr>
+                                        <td>smalldatetime</td>
+                                        <td>YYYY-MM-DD hh:mm:ss</td>
+                                    </tr>
+                                    <tr>
+                                        <td>time</td>
+                                        <td>hh:mm:ss[.nnnnnnn]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>timestamp</td>
+                                        <td>Not a date/time datatype but a rowversion column</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <h4>PostGRESql database types</h4>
+                    <div class="fragment fade-up">
+                        <pre>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>date</td>
+                                        <td>YYYY-MM-DD</td>
+                                    </tr>
+                                    <tr>
+                                        <td>time</td>
+                                        <td>hh:mm:ss[.nnnnnn]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>time with time zone</td>
+                                        <td>hh:mm:ss[.nnnnnnn][+|-]hh:mm</td>
+                                    </tr>
+                                    <tr>
+                                        <td>timestamp</td>
+                                        <td>YYYY-MM-DD hh:mm:ss[.nnnnnnn]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>timestamp with time zone</td>
+                                        <td>YYYY-MM-DD hh:mm:ss[.nnnnnnn][+|-]hh:mm</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <h4>We fiddled with these database types and here's the analysis</h4>
+                    <div class="fragment fade-up">
+                        <img src="images/sqlserver.PNG"/>
+                        <img src="images/postgres.PNG"/>
+                    </div>
+                </section>
+                <section>
+                    <h4>What role mybatis plays while persisting / retrieving date/time(s) from database?</h4>
+                    <div class="fragment fade-up">
+                        <pre>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type Handler</th>
+                                        <th>Java Types</th>
+                                        <th>JDBC Types</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>DateTypeHandler</td>
+                                        <td>java.util.Date</td>
+                                        <td>TIMESTAMP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DateOnlyTypeHandler</td>
+                                        <td>java.util.Date</td>
+                                        <td>DATE</td>
+                                    </tr>
+                                    <tr>
+                                        <td>TimeOnlyTypeHandler</td>
+                                        <td>java.util.Date</td>
+                                        <td>TIME</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SqlTimestampTypeHandler</td>
+                                        <td>java.sql.Timestamp</td>
+                                        <td>TIMESTAMP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SqlDateTypeHandler</td>
+                                        <td>java.sql.Date</td>
+                                        <td>DATE</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SqlTimeTypeHandler</td>
+                                        <td>java.sql.Time</td>
+                                        <td>TIME</td>
+                                    </tr>
+                                    <tr>
+                                        <td>InstantTypeHandler</td>
+                                        <td>java.time.Instant</td>
+                                        <td>TIMESTAMP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>LocalDateTimeTypeHandler</td>
+                                        <td>java.time.LocalDateTime</td>
+                                        <td>TIMESTAMP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>LocalDateTypeHandler</td>
+                                        <td>java.time.LocalDate</td>
+                                        <td>DATE</td>
+                                    </tr>
+                                    <tr>
+                                        <td>LocalTimeTypeHandler</td>
+                                        <td>java.time.LocalTime</td>
+                                        <td>TIME</td>
+                                    </tr>
+                                    <tr>
+                                        <td>OffsetDateTimeTypeHandler</td>
+                                        <td>java.time.OffsetDateTime</td>
+                                        <td>TIMESTAMP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>OffsetTimeTypeHandler</td>
+                                        <td>java.time.OffsetTime</td>
+                                        <td>TIME</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ZonedDateTimeTypeHandler</td>
+                                        <td>java.time.ZonedDateTime</td>
+                                        <td>TIMESTAMP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>JapaneseDateTypeHandler</td>
+                                        <td>java.time.chrono.JapaneseDate</td>
+                                        <td>DATE</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <h4>offsetDateTime vs timestamp with time zone?</h4>
+                </section>
+                <section>
+                    <h4>How to write java8 date/time objects to database with mybatis?</h4>
+                    <div class="fragment fade-up small-font" data-markdown>
+                        <script type="text/template">
+                        ```
+                        <!-- Since version 3.4.5, The MyBatis has been
+                            supported JSR-310(Date and Time API) by default -->
+                        <!-- If using older version of MyBatis then configure below -->
+                        <dependency>
+                            <groupId>org.mybatis</groupId>
+                            <artifactId>mybatis-typehandlers-jsr310</artifactId>
+                            <version>1.0.2</version>
+                        </dependency>
+                        ```
+                        </script>
+                    </div>
+                    <div class="fragment fade-up small-font" data-markdown>
+                        <script type="text/template">
+                        ```
+                        <typeHandlers>
+                            <!-- ... -->
+                            <typeHandler handler="org.apache.ibatis.type.InstantTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.LocalDateTimeTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.LocalDateTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.LocalTimeTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.OffsetDateTimeTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.OffsetTimeTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.ZonedDateTimeTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.YearTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.MonthTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.YearMonthTypeHandler" />
+                            <typeHandler handler="org.apache.ibatis.type.JapaneseDateTypeHandler" />
+                        </typeHandlers>
+                        ```
+                        </script>
+                    </div>
+                </section>
+                <section>
+                    <h4>How to store date in UTC?</h4>
+                    <div class="fragment fade-up small-font" data-markdown>
+                        <script type="text/template">
+                        ```
+                        Timestamp timestamp = new Timestamp(date.getTime());
+                        ps.setTimestamp(i, timestamp, 
+                        Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+
+                        ```
+                        </script>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Serialization of a Date</h3>
+                </section>
+                <section>
+                    <h4>Default serialization format for java.util.Date by jackson</h4>
+                    <div class="fragment fade-up small-font" data-markdown>
+                        <script type="text/template">
+                        ```
+                        ObjectMapper mapper = new ObjectMapper();
+                        System.out.println("Serialized date with default settings: " 
+                        + mapper.writeValueAsString(new Date(0)));
+                        ```
+                        </script>
+                    </div>
+                </section>
+                <section>
+                    <h4>what is the need for optimized network payload using epochs?</h4>
+                    <ul>
+                        <li class="fragment fade-up">Reduce payload</li>
+                        <li class="fragment fade-up">Faster delivery</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>Does jackson support serialization/deserialization of java.time.* classes?</h4>
+                    <div class="fragment fade-up small-font" data-markdown>
+                        <script type="text/template">
+                        ```
+                        <dependency>
+                            <groupId>com.fasterxml.jackson.datatype</groupId>
+                            <artifactId>jackson-datatype-jsr310</artifactId>
+                            <version>2.9.4</version>
+                        </dependency>
+
+                        <!-- Also load JavaTimeModule to register jsr310 serializers and deserializers-->
+                        ObjectMapper mapper = new ObjectMapper();
+                        mapper.registerModule(new JavaTimeModule());
+                        ```
+                        </script>
+                    </div>
+                </section>
+                <section>
+                    <h4>Serialized Strings for java8 date/time objects</h4>
+                    <div class="fragment fade-up" data-markdown>
+                        <script type="text/template">
+                        ```
+                        LocalDate: 2018-04-09
+                        Serialized LocalDate: [2018,4,9]
+                        Deserialized LocalDate: 2018-04-09
+                        ------------------------------------------------------------
+                        LocalDateTime: 2018-04-09T00:19:00.082
+                        Serialized LocalDateTime: [2018,4,9,0,19,0,82000000]
+                        Deserialized LocalDateTime: 2018-04-09T00:19:00.082
+                        ------------------------------------------------------------
+                        ZonedDateTime: 2018-04-09T00:19:00.084+05:30[Asia/Calcutta]
+                        Serialized ZonedDateTime: 1523213340.084000000
+                        Deserialized ZonedDateTime: 2018-04-08T18:49:00.084Z[UTC]
+                        ------------------------------------------------------------
+                        Instant: 2018-04-08T18:49:00.086Z
+                        Serialized Instant: 1523213340.086000000
+                        Deserialized Instant: 2018-04-08T18:49:00.086Z
+                        ------------------------------------------------------------
+                        ```
+                        </script>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Advanced usage questions</h3>
+                </section> <!-- TODO: Remove this later -->
+                <section>
+                    <h4>When does DST Start / End? What happens at that time?</h4>
+                    <ul>
+                        <li class="fragment fade-up">United States
+                            <ul>
+                                <li>Begins DST at 2:00 AM (local time) on 2nd Sunday in March</li>
+                                <li>Ends DST at 2:00 AM (local time) on 1st Sunday in November</li>
+                            </ul>
+                        </li>
+                        <li class="fragment fade-up">European Union
+                            <ul>
+                                <li>Begins DST at 1:00 AM UT on last Sunday in March</li>
+                                <li>Ends DST at 1:00 AM on last Sunday in October</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>How to handle past events?</h4>
+                    <div class="fragment fade-up">
+                        <ul>
+                            <li>By storing timestamps in UTC timezone as it's an exact moment in time</li>
+                            <li>In local timezone, along with timezone information</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h4>How to handle future events?</h4>
+                    <ul>
+                        <li class="fragment fade-up">If an exact moment in time, then ok to store UTC</li>
+                        <li class="fragment fade-up">If not, then in local time along with timezone information</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>How to handle cron entries / alarm clock events?</h4>
+                    <ul>
+                        <li class="fragment fade-up">Store local time and timezone information e.g. America/New_York</li>
+                        <li class="fragment fade-up">Define a policy around DST transition
+                            <ul>
+                                <li>Event to occur on the first instance (usually)</li>
+                                <li>Event to occur on the second instance (sometimes)</li>
+                                <li>Event to occur on both (rarely)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>How should we display dates/times in our webapps?</h4>
+                    <ul>
+                        <li class="fragment fade-up">Send milliseconds since Epoch / date in UTC</li>
+                        <li class="fragment fade-up">Or send timestamp + timezone</li>
+                        <li class="fragment fade-up">Define a clear contract</li>
+                        <li class="fragment fade-up">In the UI, convert the date in browser's local timezone</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>To summarize...</h3>
+                    <ul>
+                        <li class="fragment fade-up">Understand limitations/drawbacks of legacy classes</li>
+                        <li class="fragment fade-up">Take advantage of post-jdk8 jsr-310 classes</li>
+                        <li class="fragment fade-up">Understand offsets and timezone rules</li>
+                        <li class="fragment fade-up">Use jsr-310 classes end to end from persistence to Over the network serializations</li>
+                    </ul>
+                </section>
+                <section>
+                    <img src="images/questions1.jpg" />
+                </section>
+            </div>
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                slideNumber: true,
+                transition: 'convex',
+                history: true,
+                dependencies: [
+                { src: 'plugin/markdown/marked.js' },
+                { src: 'plugin/markdown/markdown.js' },
+                { src: 'plugin/notes/notes.js', async: true },
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+                ]
+            });
+        </script>
+    </body>
+</html>

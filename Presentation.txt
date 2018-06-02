@@ -1,0 +1,159 @@
+Presentation:
+--------------
+
+1.
+Introduction / Agenda
+- java.util.Date
+- java.util.Calendar
+- java.sql.Date / Time / Timestamp
+- java.time.*
+- Date serialization / de-serialization
+- DST Changes
+
+2.
+In what ways can one create a java.util.Date object?
+Pre-jdk8:
+- new Date()
+- new Date(milliseconds from epoch)
+- Calendar.getInstance().getTime()
+Post-jdk8:
+- Date.from(Instant.now())
+- Date.from(java.time.ZonedDateTime.now().toInstant())
+
+3.
+What is the default timezone of a JVM?
+System's timezone
+- timedatectl | grep "Time zone"
+- date
+To set specific timezone for JVM
+- -Duser.timezone=<TIMEZONE>
+
+4.
+What is the canonical source of TZ strings?
+- TimeZone.getAvailableIDs()
+- strings /usr/local/java/jdk9/lib/tzdb.dat | grep UTC ==> Etc/UTC
+
+5. What is the difference between:
+- UTC vs GMT
+    UTC is a time standard
+    No country follows UTC as a local timezone
+    GMT is a timezone which is followed by few countries
+- EST vs EDT vs EST5EDT vs America/New_York
+    EST : Eastern Standard Time which is always UTC - 5:00
+    EDT is not a valid timezone in java
+    EST5EDT : EDT timezone, UTC - 5:00 When not in Daylight saving, UTC - 4:00 when in Daylight saving
+    TimeZone.getTimeZone("EST5EDT").getOffset(new Date().getTime() + (60*60*24*1000*20))
+    America/New_York : Same as EST5EDT
+
+6. Which timezone should be used for new york?
+- EST5EDT vs America/New_York
+(Provide more info here..)
+
+7. What is java.util.Calendar?
+- The Calendar class is an abstract class that provides methods
+    for converting between a specific instant in time and a set of calendar fields such as YEAR, MONTH, DAY_OF_MONTH, HOUR, and so on, and
+    for manipulating the calendar fields, such as getting the date of the next week.
+
+- Calendar.getInstance()
+- Calendar calendar = new GregorianCalendar(2013,1,28,13,24,56);
+- calendar.setTime(new Date())
+
+- calendar.set(Calendar.YEAR, 2014);
+- calendar.add(Calendar.MONTH, 1);
+
+- lenient and non-lenient modes
+- leap seconds (seconds run from  0-61)
+
+8. What is a Gregorian calendar? Are there some other calendars in vogue in the JVM?
+- GregorianCalendar is a concrete subclass of Calendar and provides the standard calendar system used by most of the world
+- Specifies default fields, calendar fields adjustments/resolutions, missing fields filled with start of epoch
+
+- Months run from 0 to 11 - January to December
+- Day of week runs from 1 to 7 - Sunday to Saturday
+
+- Other calendars: Thai Buddhist Calendar, Japanese Imperial Calendar (Era-based) (https://docs.oracle.com/javase/7/docs/technotes/guides/intl/calendar.doc.html)
+
+9. What is the difference between java.util.Date and java.util.Calendar?
+- Date class operates with specific instant in time and
+- Calendar operates with difference between two dates i.e., it gives you possibility for converting between a specific instant in time and a set of calendar fields such as HOUR, YEAR, MONTH, DAY_OF_MONTH
+
+10. Why is date arithmetic deprecated in java.util.Date?
+- The API for these functions was not amenable to internationalization
+- Calendar was brought in to follow a standard for date arithmetic based on a locale or specific implementation of a calendar
+
+11. Should I ever convert a java.util.Date to another java.util.Date object using a java.util.Calendar?
+- ??? Yes (if the application is already java.util.Date and the intention is get a different instant in time by applying an offset)
+
+12. What is a java.sql.Date, java.sql.Time, java.sql.Timestamp?
+- sql.Date is java.util.Date without hours, minutes and seconds
+- sql.Time is java.util.Date without day, month and year (sets date to time of 1st jan, 1970)
+- sql.Timestamp is java.util.Date with nanos added to it (equals (Date + nanos) and hashcodes (same as Date))
+- Fun part: getMonth() zero indexed 0-11 (java8 getMonthValue() are 1-12)
+
+13. What is the toString implementation of java.util.Date and java.sql.Date?
+All in localTimezone..!!!
+jshell> new java.util.Date().toString()
+$33 ==> "Sun Mar 11 16:23:51 IST 2018"
+jshell> new java.sql.Date(d.getTime()).toString()
+$34 ==> "2018-03-11"
+jshell> new java.sql.Time(d.getTime()).toString()
+$35 ==> "16:17:43"
+jshell> new java.sql.Timestamp(d.getTime()).toString()
+$36 ==> "2018-03-11 16:17:43.089"
+
+14. What are some of the deprecated methods of java.util.Date?
+- If you are using deprecated methods of java.util.Date, you are almost always doing something incorrect.
+
+15. What is joda-time library? Is it still relevant?
+- The standard date and time classes prior to Java SE 8 are poor. By tackling this problem head-on, Joda-Time became the de facto standard date and time library for Java prior to Java SE 8. Note that from Java SE 8 onwards, users are asked to migrate to java.time (JSR-310) - a core part of the JDK which replaces this project.
+
+16. What are java.time.* classes? How to relate them to java.util.Date?
+Instant: An instantaneous point on the time-line. (Same as java.util.Date, stores millis from epoch)
+LocalDate: A date without a time-zone in the ISO-8601 calendar system, such as 2007-12-03. eg Birthday
+LocalDateTime: A date-time without a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30.
+LocalTime: A time without a time-zone in the ISO-8601 calendar system, such as 10:15:30.
+(These cannot be represented on timeline as no timezone information available with these)
+OffsetDateTime: A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00.
+OffsetTime: A time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 10:15:30+01:00.
+ZonedDateTime: A date-time with a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00 Europe/Paris.
+Period: For date based calculations
+Duration: For time based calculations
+Utilities: plus, minus, isAfter, isBefore, ofInstant, now, etc.
+Compatibility with date: date,calendar -> toInstant methods | time classes ofInstant methods
+
+17. What is deshaw.common.util.Day? and what is the use of deshaw.commmon.datelib.defaultLibraryPath?
+
+18. What are the database types available to represent date and time?
+- mssql and postgres data types:
+    https://msdn.microsoft.com/en-us/library/ms378878(v=sql.110).aspx
+    https://documentation.progress.com/output/DataDirect/DataDirectCloud/index.html#page/queries/postgresql-data-types.html
+
+19. What are the jdbc types available to represent date and time?
+- Relevant mappings done in commons-db in com.arcesium.commons.db.stage.utils.SQLServerDBType (and com.arcesium.commons.db.stage.utils.PostgresDBType)
+
+20. If db datatype doesn't have a timezone, what does mybatis do to create a java.util.Date from it? Similiarly, what does mybatis do when a java.util.Date is to be converted to a db datatype that doesn't have timezone?
+
+21. What is the default serialization format for java.util.Date by jackson? what is a ISO-8601 format, and need for optimized network payload using epochs?
+
+22. Does jackson support serialization/deserialization of java.time.* classes?
+
+23. Why is dropping the time part from a java.util.Date not safe without considering timezone?
+- Since any TZ conversion might result in a day change esp., while communicating between 2 entities which are on different timezones
+
+24. How should we display dates/times in our webapps?
+- Always display along with TZ info
+
+25. How to handle past events?
+- Using UTC is almost always a good idea for past events.
+
+26. When does DST Start / End? What happens at that time?
+When DST starts: Clock forward by 1 hour (11th March)
+When DST ends: Clock set back by 1 hour (4th November)
+
+27. How to handle future events?
+- Using local timezone is a good practice as it would take care of DST changes.
+
+28. How to calculate next run time for cron entries / alarms?
+- Make sure to handle DST changes.
+
+http://joda-time.sourceforge.net/cal_iso.html

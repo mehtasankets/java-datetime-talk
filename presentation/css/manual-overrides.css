@@ -1,0 +1,21 @@
+.reveal pre {
+  width: 100%;
+  line-height: 1em;
+}
+
+.small-font pre {
+	font-size:0.45em;
+}
+
+.reveal ul li {
+	font-size:0.80em;
+}
+
+.reveal h1, 
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+	text-transform: none;
+}
